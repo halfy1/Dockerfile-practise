@@ -1,0 +1,39 @@
+version: 2
+services:
+  redis:
+    Image: redis
+    networks:
+      - backend
+  db:
+    Image: psotgres:9.4
+    networks:
+      - backend
+  vote:
+    image: vote
+    ports:
+    -   5000:80
+    depends_on:
+    -   redis
+    networks:
+      - frontend
+      - backend
+  result:
+    Image: result-app
+    ports:
+    -   5001:80
+    depends_on:
+    -   db
+    networks:
+      - frontend
+      - backend
+  worker:
+    Image: worker
+    depends_on:
+    -   db
+    -   redis 
+    networks:
+      - backend
+
+networks:
+  frontend:
+  backend:
