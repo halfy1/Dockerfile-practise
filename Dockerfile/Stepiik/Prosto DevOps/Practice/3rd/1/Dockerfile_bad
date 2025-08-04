@@ -1,0 +1,14 @@
+#BAD version
+FROM python:3.9-sli
+
+ENV HELLO_MSG "Hello from Docker"
+
+RUN python install -r requirements.txt
+
+WORKDR /app
+
+CMD python app.py
+
+COPY . /ap
+
+EXPOSE 80
