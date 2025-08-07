@@ -1,0 +1,47 @@
+---
+- name: Настройка сетей Docker
+  hosts: docker_hosts
+  become: yes
+  
+  tasks:
+    # Создать простую bridge-сеть
+    - name: Создать сеть для приложения
+      docker_network:
+        name: app_network
+        driver: bridge
+    
+    # Сеть с кастомной конфигурацией IP
+    - name: Создать сеть с определённой подсетью
+      docker_network:
+        name: custom_network
+        driver: bridge
+        ipam_config:
+          - subnet: 172.20.0.0/16
+            gateway: 172.20.0.1
+            iprange: 172.20.1.0/24
+    
+    # Внутренняя изолированная сеть
+    - name: Создать внутреннюю сеть для БД
+      docker_network:
+        name: db_internal
+        driver: bridge
+        internal: yes
+    
+    # Подключить контейнер к сети
+    - name: Подключить контейнер к нескольким сетям
+      docker_container:
+        name: myapp
+        image: myapp:latest
+        networks:
+          - name: app_network
+            aliases:
+              - webapp
+              - frontend
+          - name: db_internal
+    
+    # Удалить неиспользуемую сеть
+    - name: Удалить старую сеть
+      docker_network:
+        name: old_network
+        state: absent
+        force: yes  # Удалить даже если есть подключенные контейнеры

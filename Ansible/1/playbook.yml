@@ -1,0 +1,44 @@
+---
+- name: Установка Docker и запуск Nginx контейнера
+  hosts: docker_hosts
+  become: yes
+  
+  tasks:
+    - name: Установить Docker
+      package:
+        name: docker.io
+        state: present
+
+    - name: Установить Python3 и pip
+      package:
+        name: 
+          - python3
+          - python3-pip
+        state: present
+
+    - name: Запустить и включить Docker службу
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Установить Docker SDK для Python
+      pip:
+        name: docker
+        state: present
+
+    - name: Запустить контейнер nginx
+      community.docker.docker_container:
+        name: webserver
+        image: nginx:latest
+        ports:
+          - "8080:80" 
+        state: started
+        restart_policy: unless-stopped
+        detach: yes
+
+    - name: Проверить статус контейнера
+      community.docker.docker_container_info:
+        name: webserver
+      register: container_info
+      failed_when: container_info.container.State.Status != 'running'

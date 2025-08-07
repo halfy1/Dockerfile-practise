@@ -1,0 +1,49 @@
+---
+- name: Деплой приложения
+  hosts: docker_hosts
+  become: yes
+  vars:
+    db_user: "admin"
+    db_password: "securepass123"
+
+  tasks:
+    - name: Cоздание сети
+      community.docker.docker_network:
+        name: app_network
+        driver: bridge
+        state: present
+
+    - name: Создание volume
+      community.docker.docker_volume:
+        name: db_data
+        state: present
+
+    - name: Запустить PostgreSQL
+      community.docker.docker_container:
+        name: postgres_db
+        image: postgres:14
+        state: started
+        restart_policy: unless-stopped
+        network_mode: bridge
+        networks:
+          - name: app_network
+        ports:
+          - "5432:5432"
+        volumes:
+          - "db_data:/var/lib/postgresql/data"
+        env:
+          POSTGRES_USER: "{{ db_user }}"
+          POSTGRES_PASSWORD: "{{ db_password }}"
+          POSTGRES_DB: "app_db"
+
+    - name: Запустить adminer
+      community.docker.docker_container:
+        name: adminer
+        image: adminer:latest
+        ports:
+          - "8080:8080"
+        networks:
+          - name: app_network
+        env:
+          ADMINER_DEFAULT_SERVER: "postgres_db"
+          

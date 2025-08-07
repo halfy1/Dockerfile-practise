@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"
+    <title>Docker Compose Практика</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .time-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f7fe;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #current-time {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0066cc;
+        }
+        button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Docker Compose Демонстрация</h1>
+        <p>Это пример работы Docker Compose с двумя связанными сервисами:</p>
+        <ul>
+            <li><strong>Веб-сервер (Nginx)</strong> - отображает эту страницу</li>
+            <li><strong>Сервис времени (Busybox)</strong> - обновляет текущее время</li>
+        </ul>
+        
+        <div class="time-container">
+            <p>Текущее время (обновляется каждые 10 секунд):</p>
+            <div id="current-time">Загрузка...</div>
+            <button onclick="checkTime()">Обновить сейчас</button>
+        </div>
+        
+        <p>Если вы видите обновляющееся время, значит:</p>
+        <ul>
+            <li>Вы успешно создали docker-compose.yml файл</li>
+            <li>Правильно настроили оба сервиса</li>
+            <li>Корректно настроили общую сеть</li>
+            <li>Правильно пробросили тома</li>
+        </ul>
+    </div>
+    
+    <script>
+        function checkTime() {
+            fetch('/time.txt')
+                .then(response => response.text())
+                .then(time => {
+                    document.getElementById('current-time').innerText = time;
+                })
+                .catch(error => {
+                    document.getElementById('current-time').innerText = 'Ошибка: время не доступно';
+                    console.error('Ошибка:', error);
+                });
+        }
+        
+        // Проверяем время при загрузке страницы
+        checkTime();
+        
+        // Проверяем время каждые 5 секунд
+        setInterval(checkTime, 5000);
+    </script>
+</body>
+</html>

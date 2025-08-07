@@ -1,0 +1,8 @@
+services:
+  web:
+    image: nginx:alpine
+    container_name: simple_web
+
+    ports:
+      - "8080:80"
+

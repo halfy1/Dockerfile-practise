@@ -1,0 +1,49 @@
+---
+- name: Управление volumes
+  hosts: docker_hosts
+  become: yes
+  
+  tasks:
+    # Создать простой volume
+    - name: Создать volume для данных
+      docker_volume:
+        name: app_data
+    
+    # Volume с метками
+    - name: Создать volume для PostgreSQL
+      docker_volume:
+        name: postgres_data
+        labels:
+          app: myapp
+          environment: production
+          backup: daily
+    
+    # Volume с кастомным драйвером (NFS пример)
+    - name: Создать NFS volume
+      docker_volume:
+        name: shared_data
+        driver: local
+        driver_options:
+          type: nfs
+          o: "addr=nfs-server.local,rw,nfsvers=4"
+          device: ":/exports/docker/shared"
+    
+    # Получить информацию о volume
+    - name: Получить информацию о volume
+      docker_volume_info:
+        name: app_data
+      register: volume_info
+    
+    - name: Показать размер volume
+      debug:
+        msg: "Volume {{ volume_info.volume.Name }} создан {{ volume_info.volume.CreatedAt }}"
+    
+    # Удалить неиспользуемые volumes
+    - name: Очистить старые volumes
+      docker_volume:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - temp_data
+        - old_app_data
+      when: cleanup_volumes | default(false)

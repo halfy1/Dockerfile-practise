@@ -1,0 +1,59 @@
+---
+- name: Работа с контейнерами
+  hosts: docker_hosts
+  become: yes
+  
+  tasks:
+    # Простой запуск контейнера
+    - name: Запустить Nginx
+      docker_container:
+        name: my_nginx
+        image: nginx:latest
+        state: started
+        ports:
+          - "8080:80"
+    
+    # Контейнер с переменными окружения и volumes
+    - name: Запустить PostgreSQL
+      docker_container:
+        name: postgres_db
+        image: postgres:14
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "5432:5432"
+        volumes:
+          - pgdata:/var/lib/postgresql/data
+          - /opt/backups:/backups:ro
+        env:
+          POSTGRES_USER: "{{ db_user }}"
+          POSTGRES_PASSWORD: "{{ db_password }}"
+          POSTGRES_DB: myapp
+    
+    # Контейнер с кастомными настройками
+    - name: Запустить приложение с лимитами
+      docker_container:
+        name: myapp
+        image: myapp:{{ app_version }}
+        state: started
+        restart_policy: always
+        ports:
+          - "3000:3000"
+        memory: 512M
+        cpus: 0.5
+        healthcheck:
+          test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+          interval: 30s
+          timeout: 10s
+          retries: 3
+        networks:
+          - name: app_network
+        labels:
+          environment: production
+          app: myapp
+    
+    # Остановка и удаление контейнера
+    - name: Удалить старый контейнер
+      docker_container:
+        name: old_app
+        state: absent

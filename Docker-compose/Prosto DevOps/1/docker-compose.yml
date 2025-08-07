@@ -1,0 +1,12 @@
+services:
+  web:
+    image: nginx:latest
+    container_name: my_web
+
+    ports:
+      - "8080:80"
+    
+    volumes:
+      - ./mywebsite:/usr/share/ngnix/html
+
+    command: nginx -g "daemon off;"

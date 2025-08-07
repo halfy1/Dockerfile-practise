@@ -1,0 +1,69 @@
+---
+- name: Работа с Docker Compose
+  hosts: docker_hosts
+  become: yes
+  
+  tasks:
+    # Запустить все сервисы из docker-compose.yml
+    - name: Запустить приложение через compose
+      docker_compose:
+        project_src: /opt/myapp
+        state: present
+    
+    # Запустить только определённые сервисы
+    - name: Запустить только web и db
+      docker_compose:
+        project_src: /opt/myapp
+        services:
+          - web
+          - db
+        state: present
+    
+    # Масштабировать сервис
+    - name: Запустить 3 экземпляра web
+      docker_compose:
+        project_src: /opt/myapp
+        scale:
+          web: 3
+        state: present
+    
+    # Остановить и удалить всё
+    - name: Остановить приложение
+      docker_compose:
+        project_src: /opt/myapp
+        state: absent
+        remove_volumes: yes
+    
+    # Перезапустить с пересозданием контейнеров
+    - name: Обновить контейнеры
+      docker_compose:
+        project_src: /opt/myapp
+        recreate: always
+        pull: yes
+        state: present
+
+
+    # docker_prune - очистка неиспользуемых ресурсов
+    - name: Очистить систему
+      docker_prune:
+        containers: yes
+        images: yes
+        volumes: yes
+        networks: yes
+        builder_cache: yes
+
+    # docker_host_info - информация о Docker
+    - name: Получить информацию о Docker
+      docker_host_info:
+      register: docker_info
+
+    - name: Показать версию Docker
+      debug:
+        msg: "Docker версия: {{ docker_info.ServerVersion }}"
+
+    # docker_login - авторизация в registry
+    - name: Войти в Docker Hub
+      docker_login:
+        username: "{{ docker_hub_user }}"
+        password: "{{ docker_hub_pass }}"
+        registry_url: https://index.docker.io/v1/

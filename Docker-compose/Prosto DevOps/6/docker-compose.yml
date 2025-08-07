@@ -1,0 +1,41 @@
+version: '3'
+services:
+  web:
+    image: nginx:latest
+    container_name: dev-web
+    ports:
+      - "8000:80"
+    volumes:
+      - ./src:/usr/share/nginx/html
+    depends_on:
+      - db
+    networks:
+      - dev-network
+    
+  db:
+    image: postgres:13
+    container_name: dev-db
+    environment:
+      - POSTGRES_DB: development
+      - POSTGRES_USER: developer
+      - POSTGRES_PASSWORD: devpassword
+    volumes:
+      - dev-db-data:/usr/
+    networks:
+      - dev-network
+
+  adminer:
+    image: adminer:latest
+    container_name: dev-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - dev-network
+    
+volumes:
+  dev-db-data:
+
+networks:
+  dev-network:

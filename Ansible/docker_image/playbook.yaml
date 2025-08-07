@@ -1,0 +1,53 @@
+---
+- name: Управление образами
+  hosts: docker_hosts
+  become: yes
+  
+  tasks:
+    # Скачать образ из registry
+    - name: Скачать последний образ nginx
+      docker_image:
+        name: nginx
+        source: pull
+        tag: latest
+    
+    # Собрать образ из Dockerfile
+    - name: Собрать образ приложения
+      docker_image:
+        name: myapp
+        tag: "{{ git_commit | default('latest') }}"
+        source: build
+        build:
+          path: /opt/myapp
+          dockerfile: Dockerfile.prod
+          args:
+            APP_VERSION: "{{ app_version }}"
+            BUILD_DATE: "{{ ansible_date_time.iso8601 }}"
+          cache_from:
+            - myapp:latest
+    
+    # Загрузить образ из tar-архива
+    - name: Загрузить образ из файла
+      docker_image:
+        name: myapp
+        tag: backup
+        source: load
+        load_path: /backups/myapp.tar
+    
+    # Удалить старые образы
+    - name: Удалить неиспользуемые образы
+      docker_image:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - old_app:v1.0
+        - old_app:v1.1
+        - temp_build:latest
+    
+    # Принудительно обновить образ
+    - name: Обновить образ базы данных
+      docker_image:
+        name: postgres
+        tag: "14"
+        source: pull
+        force_source: yes
